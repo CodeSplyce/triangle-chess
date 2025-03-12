@@ -5,6 +5,7 @@ const ReactCompilerConfig = { target: '19' };
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: '/triangle-chess/',
   plugins: [react({
     babel: {
       plugins: [
