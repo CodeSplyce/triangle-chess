@@ -3,6 +3,7 @@ import React from "react";
 import Territory from "./Territory.tsx";
 import Border from "./Border.tsx";
 import Peg from "./Peg.tsx";
+import EndGameBanner from "./EndGameBanner.tsx";
 
 function Game() {
   const startSize = 4;
@@ -60,8 +61,8 @@ function Game() {
   const [Winner, setWinner] = React.useState(-1);
   const [midPoint, setMidPoint] = React.useState((board.length - 1) / 2);
 
-  function NewGame() {
-    if (!GetGameEndInd()) {
+  const NewGame = React.useCallback(() => {
+    if (!GetGameEndInd) {
       return
     }
     setBoard(InitBoard());
@@ -73,11 +74,11 @@ function Game() {
     setMidPoint((board.length - 1) / 2);
     setMaxTerritories(21);
     setPlayers(InitPlayers());
-  }
+  }, [Winner]);
 
-  function GetGameEndInd() {
+  const GetGameEndInd = React.useMemo(() => {
     return Winner !== -1;
-  }
+  }, [Winner]);
 
   React.useEffect(() => {
     CalculatePossibleMoves();
@@ -284,7 +285,7 @@ function Game() {
   }
 
   function Press(i: number, k: number, g: number) {
-    if (GetGameEndInd()) return undefined;
+    if (GetGameEndInd) return undefined;
 
     if (selected !== null && selected[0] == i && selected[1] == k && selected[2] == g) {
       setSelected(null);
@@ -381,23 +382,7 @@ function Game() {
 
   return (
     <>
-      {!GetGameEndInd() && (
-        <div>
-          <div style={{flex: 1}}>&nbsp;</div>
-          <div style={{flex: 1}}>&nbsp;</div>
-        </div>
-      )}
-      {GetGameEndInd() && (
-        <div style={{
-          backgroundColor: "#888",
-          fontWeight: "bold",
-          position: "relative",
-          top: 75
-        }}>
-          <div style={{color: GetPlayerColor(Winner), flex: 1}}>Player {Winner + 1} Wins!</div>
-          <div style={{flex: 1}}>Click to play a new game</div>
-        </div>
-      )}
+      <EndGameBanner GameEndInd={GetGameEndInd} onClick={NewGame} color={GetPlayerColor(Winner)} winnerNumber={Winner} />
       <div style={{backgroundColor: "#888", fontWeight: "bold", display: "flex", alignItems: "center"}}>
         <div style={{color: GetPlayerColor(0), flex: 1}}>
           Player 1: {GetPoints(0)}
@@ -416,18 +401,18 @@ function Game() {
           <Border placement={boardPlacement} spacing={spacing} border={line} boardSize={endSize} board={board} key={"line" + i} />
         )}
         {board.map((arr, y) =>
-          <>
+          <React.Fragment key={y}>
             {arr.map((_, x) =>
-              <Peg placement={boardPlacement} x={x} y={y} z={arr.length} color={CircleColor(y, x, arr.length)} boardSize={endSize} spacing={spacing} selected={SelectedInd(y, x, arr.length)} onClick={Press} key={`circle_${y}_${x}_${arr.length}`}/>
+              <Peg placement={boardPlacement} x={x} y={y} z={arr.length} color={CircleColor(y, x, arr.length)} boardSize={endSize} spacing={spacing} selected={SelectedInd(y, x, arr.length)} onClick={Press} key={`circle_${y}_${x}`}/>
             )}
-          </>
+          </React.Fragment>
         )}
         {territory.map((arr, y) =>
-          <>
+          <React.Fragment key={y}>
             {arr.map((playerTurn, x) =>
               <Territory placement={boardPlacement} spacing={spacing} x={x} y={y} midPoint={midPoint} color={GetPlayerColor(playerTurn)} key={`triangle_${y}_${x}`}/>
             )}
-          </>
+          </React.Fragment>
         )}
       </svg>
     </>
